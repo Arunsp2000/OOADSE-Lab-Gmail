@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <title>Compose</title>
+        <style>
+        	body{
+            	text-align: center;
+            	background: url(bg.jpg) no-repeat center center fixed; 
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+            .separate {
+            	margin-bottom: 10px;
+            	padding-bottom: 10px;
+            	border-bottom: 1px solid lightgrey;  
+            }
+            input,
+            input:focus,
+            textarea,
+            textarea:focus {
+            	border: none;
+            	outline: none;
+            	width:400px;
+            }
+
+            input:focus,
+            .send{
+            	background-color: rgb(56,123,225);
+            	color: white;
+            	width: 75px;
+            	height: 40px;
+                border-radius: 5px;
+            }
+            .card {
+            	background-color: white;
+                display: inline-block;
+                border-radius: 15px;
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+                transition: 0.3s;
+                padding: 30px;
+                margin: 20px;
+                text-align: left;
+            }
+            .head {
+            	font-size: 20px;
+            	margin-bottom: 20px;
+            	padding-bottom: 5px;
+            }
+            .header{
+                color: white;
+                border: none;
+                font-size: 70px;
+                text-decoration: none;
+            }
+        </style>
+    </head>
+	<body>
+		<div style="margin-bottom: 30px;margin-top: 50px;"><a class = "header" href = "./mainpage.html">GMAIL</a></div>
+		<form action="" class = "card">
+			<div class = "head">Compose Mail</div>
+			<div class = "separate">
+				<label for="fname">To </label>
+				<input type="text" id="fname" name="fname">
+			</div>
+			<div class = "separate">
+				<label for="fname">Subject </label>
+				<input type="text" id="fname" name="fname">
+			</div>
+			<div style="margin-bottom: 20px;">
+				<label for="fname"></label>
+				<textarea style="width:450px;height: 300px;" placeholder="Type Here" name="comment" rows="4" cols="50" form="usrform"></textarea>
+			</div>
+			<input class="send" type="submit" value="Send">
+		</form>
+	</body>
+</html>
