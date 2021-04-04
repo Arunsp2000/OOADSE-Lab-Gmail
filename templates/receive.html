@@ -1,0 +1,172 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <title>Receive</title>
+        <style>
+            body{
+                background: url(/static/images/bg.jpg) no-repeat center center fixed; 
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+
+            .header, .mb{
+                color: white;
+                border: none;
+                font-size: 70px;
+                margin-top: 50px; 
+                text-decoration: none;
+            }
+
+            .sidenav {
+                color: white;
+                height: 100%;
+                width: 260px;
+                position: fixed;
+                z-index: 1;
+                top: 0;
+                left: 0;
+                background-color: #111;
+                overflow-x: hidden;
+                padding: 20px;
+            }
+
+            .rightconfig{
+                text-align: center;
+                margin-left: 300px;
+                padding: 0px 10px;
+            }
+
+            .right{
+                color: white;
+                background: inherit;
+                border: none;
+            }
+
+            .separate{
+                padding: 20px 30px 15px 0;
+                marging: 20px 30px 15px 0;
+            }
+
+            .folder_input, .folder_input:focus {
+                border: none;
+                border-bottom: 2px solid white;
+                background-color: inherit;
+                width: 200px;
+                outline: none;
+                color: white;
+            }
+
+            .search, .search:focus, .search-btn, .search-btn:focus{
+                border: none;
+                outline: none;
+                background-color: inherit;
+            }
+
+            .search, .search:focus{
+                margin-left: 20px;
+                font-size: 20px;
+                border-bottom: 2px solid black; 
+                color:white;
+            }
+
+            .mb{
+                margin: 40px 0px 40px 0px;
+                font-size: 50px;
+            }
+
+            .search::placeholder {
+                color: black;
+            }
+
+            .dropbtn {
+                background-color: inherit;
+                color: white;
+                padding: 16px;
+                font-size: 16px;
+                border: none;
+                cursor: pointer;
+            }
+
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: #f9f9f9;
+                min-width: 160px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 1;
+            }
+
+            .dropdown-content a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+            }
+
+            .dropdown-content a:hover {background-color: #f1f1f1}
+
+            .dropdown:hover .dropdown-content {
+                display: block;
+            }
+
+            .dropdown:hover .dropbtn {
+                background-color: #3e8e41;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class = "wrapper">
+            <!-- left -->
+            <div class = "sidenav">
+                <div class="dropdown">
+                    <div class="separate" style="display: inline;">
+                        Folders
+                    </div>
+                    <button class="dropbtn" style="display: inline;">&#8595;</button>
+                    <div class="dropdown-content">
+                        <a href="#">Sent</a>
+                        <a href="#">Spam</a>
+                        <a href="#">Important</a>
+                        <a href="#">Archive</a>
+                        <a href="#">Trash</a>
+                    </div>
+                </div>
+                <div class="separate">
+                    <div style="margin-bottom: 10px;">Create Folder</div>
+                    <input type="text" name="create" placeholder="Folder Name..." class="folder_input">
+                    <button class = "right">&#10004;</button>
+                </div>
+                <div class="separate">
+                    <div style="margin-bottom: 10px;">Delete Folder</div>
+                    <input type="text" name="create" placeholder="Folder Name..." class="folder_input">
+                    <button class = "right">&#10004;</button>
+                </div>
+            </div>
+
+            <!-- right -->
+            <div class = "rightconfig">
+                <div class = "header">
+                    <a style="color: white;border: none;text-decoration: none;" href = "./mainpage.html">
+                        GMAIL
+                    </a>
+                </div>
+                <div>
+                    <div class="mb">MAILBOX</div>
+                    <input type="text" id="search" name="search" placeholder="Search..." class = "search">
+                    <button class = "fa fa-search search-btn"></button>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+
