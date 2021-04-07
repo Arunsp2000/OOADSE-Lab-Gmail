@@ -17,8 +17,121 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-from helpers import *
 
+def clean(text):
+    # clean text for creating a folder
+    return "".join(c if c.isalnum() else "_" for c in text)
+
+def create_connection(db_file):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file,check_same_thread=False)
+        return conn
+    except Error as e:
+        print(e)
+    return conn
+
+# Database
+database = r"data.db"
+conn = create_connection(database)
+
+def create_table(create_table_sql):
+    try:
+        c = conn.cursor()
+        c.execute(create_table_sql)
+        conn.commit()
+    except Error as e:
+        print("table: ",e)
+
+
+def add_vals(mails):
+    try:
+        sql = ''' INSERT INTO mails(id, sender, receiver, subject, body)
+                  VALUES(?,?,?,?,?)'''
+        
+        cur = conn.cursor()
+        cur.execute(sql,mails)
+        conn.commit()
+    except Exception as e: print(e);
+
+def create_all_folders_db(folders):
+        sql_check_table_exists = """SELECT count(*) FROM sqlite_master 
+                                    WHERE type='table' AND name='folders';"""
+
+        cur = conn.cursor();
+        cur.execute(sql_check_table_exists);
+        if cur.fetchall()[0][0]: return;
+
+        sql_create_folder = """ CREATE TABLE folders (
+                                        id integer PRIMARY KEY AUTOINCREMENT,
+                                        name text NOT NULL UNIQUE,
+                                        def boolean NOT NULL
+                                    ); """
+
+        sql_create_folder_link = """ CREATE TABLE folders_link (
+                                        id integer PRIMARY KEY AUTOINCREMENT,
+                                        mail_id integer NOT NULL,
+                                        folder_id integer NOT NULL,
+                                        FOREIGN KEY (mail_id) REFERENCES mails (id), 
+                                        FOREIGN KEY (folder_id) REFERENCES folders (id), 
+                                        CONSTRAINT folder_link_constraint UNIQUE (mail_id, folder_id)
+                                ); """
+
+        sql_create_sent_mails = """ CREATE TABLE sent_mails (
+                                        id integer PRIMARY KEY,
+                                        sender text NOT NULL,
+                                        receiver text NOT NULL,
+                                        subject text,
+                                        body text
+                                ); """
+
+        if conn is not None:
+            create_table(sql_create_folder);
+            create_table(sql_create_folder_link);
+            create_table(sql_create_sent_mails);
+            print("HI")
+            for folder in folders.keys():
+                insert_folder_db(folder, 1);
+        else:
+            print("Error! cannot create the database connection.");
+
+def retrieve_custom_folders_db() -> dict:
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM folders WHERE folders.def == 0");
+    cf = {};
+    for folders in cur.fetchall(): cf[folders[1]] = (Folder(folders[1]), 0);
+    return cf;
+
+def insert_folder_db(name, default) -> bool:
+    try:
+        cur = conn.cursor()
+        print("HI")
+        cur.execute('''INSERT INTO folders(name, def) VALUES(?,?)''', (name, default,))
+        conn.commit()
+        return 1;
+    except Exception as e:
+        print(e)
+        return 0;
+
+def delete_folder_db(name) -> bool:
+    try:
+        cur = conn.cursor()
+        cur.execute('''DELETE FROM folders WHERE folders.name == (?)''', (name,))
+        conn.commit()
+        return 1;
+    except Exception as e:
+        print(e)
+        return 0;
+
+def insert_sent_mails_db(mails) -> bool:
+    try:
+        sql = ''' INSERT INTO sent_mails(id, sender, receiver, subject, body)
+                  VALUES(?,?,?,?,?)'''
+        
+        cur = conn.cursor()
+        cur.execute(sql, mails)
+        conn.commit()
+    except Exception as e: print(e);
 
 app = Flask(__name__)
 
@@ -56,7 +169,7 @@ class MailBox:
     
     def create_folder(self, name):
         if name not in self.folders:
-            self.folders[name] = Folder(name);
+            self.folders[name] = (Folder(name),0)
             insert_folder_db(name, 0);
             print("Folder Created")
         else:
@@ -64,6 +177,7 @@ class MailBox:
     
     def delete_folder(self, name):
         if name in self.folders:
+            print(self.folders[name])
             if not self.folders[name][1]:
                 delete_folder_db(name);
                 self.folders.pop(name);
@@ -144,8 +258,8 @@ class MailBox:
                     From, encoding = decode_header(msg.get("From"))[0]
                     if isinstance(From, bytes):
                         From = From.decode(encoding)
-                    print("Subject:", subject)
-                    print("From:", From)
+                    # print("Subject:", subject)
+                    # print("From:", From)
 
                     # if the email message is multipart
                     if msg.is_multipart():
@@ -162,7 +276,7 @@ class MailBox:
                                 pass
                             if content_type == "text/plain" and "attachment" not in content_disposition:
                                 # print text/plain emails and skip attachments
-                                print(body)
+                                # print(body)
                                 copy_body = body
                             elif "attachment" in content_disposition:
                                 # download attachment
@@ -201,14 +315,12 @@ class MailBox:
         #create tables
         if conn is not None:
             # create projects table
-            create_table(conn, sql_create_projects_table)
+            create_table(sql_create_projects_table)
             for mail in mails:
                 m = (mail.id, mail.sender, mail.receiver, mail.subject, mail.body)
-                add_vals(conn, m)
+                add_vals(m)
         else:
-            print("Error! cannot create the database connection.")
-        imap.close()
-        imap.logout()     
+            print("Error! cannot create the database connection.")   
         return mails
 
 
@@ -229,10 +341,12 @@ class Draft:
 
     def send(self):
         if(self.receivers == ""):
-            print("Error!")
-            sys.exit(0)
+            self.return_err()
+            return
+            
         
         mailids = self.parse_receivers()
+        insert_sent_mails_db((self.mail_id, username, mailids, self.subject, self.body));
 
         for mailid in mailids:
             s = smtplib.SMTP('smtp.gmail.com', 587)
@@ -241,12 +355,22 @@ class Draft:
             message = "Subject: " + self.subject + "\n" + self.body
             s.sendmail(username, mailid, message)
             s.quit()
-            insert_sent_mails_db((self.mail_id, username, mailid, self.subject, self.body));
             self.sendob.mails.append(self.mail_id)
+        
+        try:
             del drafts[self.mail_id]
-    
+        except KeyError:
+            print("Key not found")
+
     def discard(self):
-        del drafts[self.mail_id]
+        try:
+            del drafts[self.mail_id]
+        except KeyError:
+            print("Key not found")
+
+    def return_err(self):
+        print("Error")
+        return
 
 
 class Folder:
@@ -319,9 +443,22 @@ class Archive(Folder):
 def mainpage():
     return render_template('mainpage.html')
 
+@app.route('/mainpage.html')
+def mainpage1():
+    return render_template('mainpage.html')
+
 @app.route('/send.html')
 def send():
     return render_template('./send.html')
+
+@app.route('/send_mainpage.html')
+def send_mainpage():
+    return render_template('./send_mainpage.html')
+
+@app.route('/drafts.html')
+def send_drafts():
+    return render_template('./drafts.html')
+
 
 @app.route('/sent.html', methods = ['POST', 'GET'])
 def sent():
@@ -329,62 +466,84 @@ def sent():
         result = request.form
         print(result)
         receivers = result['receiver_name']
+        print(receivers)
+        if(receivers == ""):
+            return render_template('./err.html')
         subject = result['subject']
         body = result['body']
         draft = m.compose(receivers, subject, body)
         draft.send()
         return render_template('./sent.html')
 
-@app.route('/receive.html')
+@app.route('/err.html', methods = ['POST', 'GET'])
+def err():
+    return render_template('./err.html')
+
+@app.route('/receive.html', methods = ['POST', 'GET'])
 def receive():
-    return render_template('./receive.html')
+    folder=m.folders.keys()
+    rec_mails=m.receive()
+    for i in range(len(m.folders["Trash"][0].mails)):
+        for j in range(len(rec_mails)):
+            if(m.folders["Trash"][0].mails[i]==rec_mails[j].id):
+                rec_mails.pop(j)
+                break;
+    
+    if(request.method=="GET"):
+        return render_template('./receive.html',content=rec_mails,folder=folder)
+    
+    elif(request.method=="POST"):
+        if request.form.get("search"):
+            result=request.form['search']
+            rec_mails=m.search(result)
+            for i in range(len(m.folders["Trash"][0].mails)):
+                for j in range(len(rec_mails)):
+                    if(m.folders["Trash"][0].mails[i]==rec_mails[j].id):
+                        rec_mails.pop(j)
+                        break;
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+        
+        elif request.form.get("create"):
+            result=request.form['create']
+            m.create_folder(result)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+        
+        elif request.form.get("Del_Folder"):
+            result=request.form['Del_Folder']
+            m.delete_folder(result)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+        
+        elif request.form.get("Send1") and request.form.get("Send2"):
+            folder_name=request.form['Send1']
+            Mail_id=request.form['Send2']
+            Mail_id=int(Mail_id)
+            m.send_to_folder(folder_name,Mail_id)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+        
+        elif request.form.get("Del_Mail"):
+            Mail_id=request.form['Del_Mail']
+            Mail_id=int(Mail_id)
+            m.delete(Mail_id)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+        
+        elif request.form.get("Rem_Mail1") and request.form.get("Rem_Mail2"):
+            folder_name=request.form['Rem_Mail1']
+            Mail_id=request.form['Rem_Mail2']
+            Mail_id=int(Mail_id)
+            if folder_name in m.folders:
+                m.folders[folder_name][0].remove_mails(Mail_id)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+
+        else:
+            for k in m.folders.keys():
+                if request.form.get(k):
+                    rec_mails = m.show(k);
+                    return render_template('./receive.html',content=rec_mails,folder=folder)
+            return render_template('./receive.html',content=rec_mails,folder=folder)
+
 
 if __name__ == "__main__":
     m  = MailBox()
     app.run(debug=True)
-
-# m.receive();
-# print(m.search("loop"));
-# m.create_folder(input("Folder? "))
-# print(m.folders.keys())
-# sql = '''SELECT * FROM folders'''
-        
-# cur = conn.cursor()
-# cur.execute(sql)
-# for i in cur.fetchall():
-#     print(i)
-# x = input("Folder? ");
-# # m.send_to_folder(x, 2)
-# m.folders[x][0].remove_mails(2);
-# print(m.folders[x][0].mails);
-# print(m.show(x));
-# sql = '''SELECT * FROM folders_link'''
-        
-# cur = conn.cursor()
-# cur.execute(sql)
-# for i in cur.fetchall():
-#     print(i)
-# # conn.commit()
-# print("HERE: ", m.folders["Sent"][0].mails);
-
-# m.receive()
-# sql = '''SELECT * FROM sent_mails'''
-        
-# cur = conn.cursor()
-# cur.execute(sql)
-# for i in cur.fetchall():
-#     print(i)
-
-    
-
-
-    
-    
-
-
-        
-
-
-
-
-        
+    imap.close()
+    imap.logout()

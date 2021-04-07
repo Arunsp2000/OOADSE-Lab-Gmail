@@ -47,7 +47,7 @@
 
             .separate{
                 padding: 20px 30px 15px 0;
-                marging: 20px 30px 15px 0;
+                /* margin: 20px 30px 15px 0; */
             }
 
             .folder_input, .folder_input:focus {
@@ -68,7 +68,7 @@
             .search, .search:focus{
                 margin-left: 20px;
                 font-size: 20px;
-                border-bottom: 2px solid black; 
+                border-bottom: 2px solid white; 
                 color:white;
             }
 
@@ -78,7 +78,7 @@
             }
 
             .search::placeholder {
-                color: black;
+                color: lightgrey;
             }
 
             .dropbtn {
@@ -104,14 +104,25 @@
                 z-index: 1;
             }
 
-            .dropdown-content a {
+            .dropdown-content input {
                 color: black;
                 padding: 12px 16px;
                 text-decoration: none;
                 display: block;
+                outline: none;
+                border: none;
+                width: 100%;
+                margin: 0;
             }
 
-            .dropdown-content a:hover {background-color: #f1f1f1}
+            .dropdown-content form {
+                padding:0;
+                margin:0;
+            }
+
+            .dropdown-content input:hover {
+                background-color: lightgrey
+            }
 
             .dropdown:hover .dropdown-content {
                 display: block;
@@ -119,6 +130,27 @@
 
             .dropdown:hover .dropbtn {
                 background-color: #3e8e41;
+            }
+
+            .search_btn {
+                background-color: inherit;
+                border: none;
+            }
+            
+            table,td {
+                font-family: monospace;
+                font-size: 16px;
+                text-align: left;
+                width: 100%;
+                max-width: 900px;
+                word-wrap: break-word;
+                border-top: 1px solid white;
+                border-bottom: 1px solid white;
+                border-collapse: collapse;
+                color: white;
+                padding: 10px;
+                border-spacing: 0 15px;
+                background-color: inherit;
             }
         </style>
     </head>
@@ -133,22 +165,49 @@
                     </div>
                     <button class="dropbtn" style="display: inline;">&#8595;</button>
                     <div class="dropdown-content">
-                        <a href="#">Sent</a>
-                        <a href="#">Spam</a>
-                        <a href="#">Important</a>
-                        <a href="#">Archive</a>
-                        <a href="#">Trash</a>
+                    {% for i in folder %}
+                        <form action="#" method="POST">
+                            <input type="submit" value="{{i}}" name="{{i}}">{{i}}</input>
+                        </form>
+                    {% endfor %}
                     </div>
                 </div>
                 <div class="separate">
                     <div style="margin-bottom: 10px;">Create Folder</div>
+                    <form action="#" method="POST">
                     <input type="text" name="create" placeholder="Folder Name..." class="folder_input">
                     <button class = "right">&#10004;</button>
+                    </form>    
                 </div>
                 <div class="separate">
+                    <form action="#" method="POST">
                     <div style="margin-bottom: 10px;">Delete Folder</div>
-                    <input type="text" name="create" placeholder="Folder Name..." class="folder_input">
+                    <input type="text" name="Del_Folder" placeholder="Folder Name..." class="folder_input">
                     <button class = "right">&#10004;</button>
+                    </form>
+                </div>
+                <div class="separate">
+                    <div style="margin-bottom: 10px;">Send to Folder</div>
+                    <form action="#" method="POST">
+                    <input type="text" name="Send1" placeholder="Folder Name..." class="folder_input"><br><br>
+                    <input type="text" name="Send2" placeholder="Mail_Id" class="folder_input">
+                    <button class = "right">&#10004;</button>
+                    </form>
+                </div>
+                <div class="separate">
+                    <form action="#" method="POST">
+                    <div style="margin-bottom: 10px;">Delete Mail</div>
+                    <input type="text" name="Del_Mail" placeholder="Mail_Id" class="folder_input">
+                    <button class = "right">&#10004;</button>
+                    </form>
+                </div>
+                <div class="separate">
+                    <form action="#" method="POST">
+                    <div style="margin-bottom: 10px;">Remove Mail From Folder</div>
+                    <input type="text" name="Rem_Mail1" placeholder="Folder Name..." class="folder_input"><br><br>
+                    <input type="text" name="Rem_Mail2" placeholder="Mail_Id" class="folder_input">
+                    <button class = "right">&#10004;</button>
+                    </form>
                 </div>
             </div>
 
@@ -161,8 +220,22 @@
                 </div>
                 <div>
                     <div class="mb">MAILBOX</div>
+                    <form action="#" method="POST"> 
                     <input type="text" id="search" name="search" placeholder="Search..." class = "search">
-                    <button class = "fa fa-search search-btn"></button>
+                    <button type="submit" class="search_btn">&#128269;</button>
+                    </form>
+                </div>
+                <div>
+                    <table>
+                    {% for x in content %}
+                    <tr><td>
+                        <span style="font-weight: bold">Mail ID</span><span style="white-space: pre;">       : {{x.id}}</span><br>
+                        <span style="font-weight: bold">From</span><span style="white-space: pre;">          : {{x.receiver}}</span><br>
+                        <span style="font-weight: bold">Mail Subject</span><span style="white-space: pre;">  : {{x.subject}}</span><br>
+                        <span style="font-weight: bold">Mail Body</span><span style="white-space: pre-wrap;">     : {{x.body}}</span><br>
+                    </td> </tr>
+                    {% endfor %}
+                    </table>
                 </div>
             </div>
         </div>
