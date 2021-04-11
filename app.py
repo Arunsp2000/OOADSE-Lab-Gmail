@@ -89,7 +89,6 @@ def create_all_folders_db(folders):
             create_table(sql_create_folder);
             create_table(sql_create_folder_link);
             create_table(sql_create_sent_mails);
-            print("HI")
             for folder in folders.keys():
                 insert_folder_db(folder, 1);
         else:
@@ -105,7 +104,6 @@ def retrieve_custom_folders_db() -> dict:
 def insert_folder_db(name, default) -> bool:
     try:
         cur = conn.cursor()
-        print("HI")
         cur.execute('''INSERT INTO folders(name, def) VALUES(?,?)''', (name, default,))
         conn.commit()
         return 1;
@@ -131,7 +129,7 @@ def insert_sent_mails_db(mails) -> bool:
         cur = conn.cursor()
         cur.execute(sql, mails)
         conn.commit()
-    except Exception as e: print(e);
+    except Exception as e: print("HI",e);
 
 app = Flask(__name__)
 
@@ -346,7 +344,8 @@ class Draft:
             
         
         mailids = self.parse_receivers()
-        insert_sent_mails_db((self.mail_id, username, mailids, self.subject, self.body));
+        new_recv=",".join(mailids)
+        insert_sent_mails_db((self.mail_id, username, new_recv, self.subject, self.body));
 
         for mailid in mailids:
             s = smtplib.SMTP('smtp.gmail.com', 587)
@@ -355,7 +354,7 @@ class Draft:
             message = "Subject: " + self.subject + "\n" + self.body
             s.sendmail(username, mailid, message)
             s.quit()
-            self.sendob.mails.append(self.mail_id)
+        self.sendob.mails.append(Mail(self.mail_id,username,new_recv,self.subject,self.body))
         
         try:
             del drafts[self.mail_id]
@@ -410,9 +409,9 @@ class Sent(Folder):
     def retrieve_mails_db(self):
         try:
             cur = conn.cursor()
-            cur.execute('''SELECT id FROM sent_mails''')
-            for mail_id in cur.fetchall():
-                self.mails.append(mail_id[0]);
+            cur.execute('''SELECT * FROM sent_mails''')
+            for mail in cur.fetchall():
+                self.mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]))
             return 1;
         except Exception as e:
             print(e)
@@ -537,9 +536,11 @@ def receive():
         else:
             for k in m.folders.keys():
                 if request.form.get(k):
-                    rec_mails = m.show(k);
+                    if k == "Sent":
+                        rec_mails = m.folders[k][0].mails;
+                    else:
+                        rec_mails = m.show(k);
                     return render_template('./receive.html',content=rec_mails,folder=folder)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
 
 
 if __name__ == "__main__":
