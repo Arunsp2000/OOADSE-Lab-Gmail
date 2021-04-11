@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>
-            Mail Sent!
-        </title>
+	<head>
+        <title>Mail Sent!</title>
+        <style>
+        	body{
+            	text-align: center;
+            	background: url(/static/images/bg.jpg) no-repeat center center fixed; 
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+            .head {
+            	font-size: 20px;
+            	margin-bottom: 20px;
+            	padding-bottom: 5px;
+            }
+            .header{
+                color: white;
+                border: none;
+                font-size: 70px;
+                text-decoration: none;
+            }
+            .Sent {
+            	font-size: 30px;
+            	padding-top: 100px;
+            	color: white;
+            }
+        </style>
     </head>
-    <body>
-        Your mail was sent!
-    </body>
+	<body>
+		<div style = "margin-bottom: 30px;margin-top: 50px;"><a class = "header" href = "./mainpage.html">GMAIL</a></div>
+		<div class = "Sent">Your mail was successfully sent!</div>
+	</body>
 </html>
