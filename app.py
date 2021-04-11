@@ -513,25 +513,34 @@ def receive():
             return render_template('./receive.html',content=rec_mails,folder=folder)
         
         elif request.form.get("Send1") and request.form.get("Send2"):
-            folder_name=request.form['Send1']
-            Mail_id=request.form['Send2']
-            Mail_id=int(Mail_id)
-            m.send_to_folder(folder_name,Mail_id)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            try:
+                folder_name=request.form['Send1']
+                Mail_id=request.form['Send2']
+                Mail_id=int(Mail_id)
+                m.send_to_folder(folder_name,Mail_id)
+            except: pass;
+            finally:
+                return render_template('./receive.html',content=rec_mails,folder=folder)
         
         elif request.form.get("Del_Mail"):
-            Mail_id=request.form['Del_Mail']
-            Mail_id=int(Mail_id)
-            m.delete(Mail_id)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            try:
+                Mail_id=request.form['Del_Mail']
+                Mail_id=int(Mail_id)
+                m.delete(Mail_id)
+            except: pass;
+            finally:
+                return render_template('./receive.html',content=rec_mails,folder=folder)
         
         elif request.form.get("Rem_Mail1") and request.form.get("Rem_Mail2"):
-            folder_name=request.form['Rem_Mail1']
-            Mail_id=request.form['Rem_Mail2']
-            Mail_id=int(Mail_id)
-            if folder_name in m.folders:
-                m.folders[folder_name][0].remove_mails(Mail_id)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            try:
+                folder_name=request.form['Rem_Mail1']
+                Mail_id=request.form['Rem_Mail2']
+                Mail_id=int(Mail_id)
+                if folder_name in m.folders:
+                    m.folders[folder_name][0].remove_mails(Mail_id)
+            except: pass;
+            finally:
+                return render_template('./receive.html',content=rec_mails,folder=folder)
 
         else:
             for k in m.folders.keys():
