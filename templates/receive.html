@@ -81,10 +81,11 @@
                 color: lightgrey;
             }
 
-            .dropbtn {
+            .dropbtn,  .dropbtn:hover{
                 background-color: inherit;
                 color: white;
                 padding: 16px;
+                margin-left: 100px; 
                 font-size: 16px;
                 border: none;
                 cursor: pointer;
@@ -101,6 +102,9 @@
                 background-color: #f9f9f9;
                 min-width: 160px;
                 box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                border: 1px solid white;
+                border-radius: 5px;
+                margin-left: 60px;
                 z-index: 1;
             }
 
@@ -112,10 +116,11 @@
                 outline: none;
                 border: none;
                 width: 100%;
+                font-weight: bold;
                 margin: 0;
             }
 
-            .dropdown-content form {
+            .formdrop {
                 padding:0;
                 margin:0;
             }
@@ -126,10 +131,6 @@
 
             .dropdown:hover .dropdown-content {
                 display: block;
-            }
-
-            .dropdown:hover .dropbtn {
-                background-color: #3e8e41;
             }
 
             .search_btn {
@@ -166,7 +167,7 @@
                     <button class="dropbtn" style="display: inline;">&#8595;</button>
                     <div class="dropdown-content">
                     {% for i in folder %}
-                        <form action="#" method="POST">
+                        <form action="#" method="POST" class="formdrop">
                             <input type="submit" value="{{i}}" name="{{i}}">{{i}}</input>
                         </form>
                     {% endfor %}
