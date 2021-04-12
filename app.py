@@ -27,8 +27,7 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file,check_same_thread=False)
         return conn
-    except Error as e:
-        print(e)
+    except Error as e: pass;
     return conn
 
 # Database
@@ -41,7 +40,7 @@ def create_table(create_table_sql):
         c.execute(create_table_sql)
         conn.commit()
     except Error as e:
-        print("table: ",e)
+        pass;
 
 
 def add_vals(mails):
@@ -52,7 +51,7 @@ def add_vals(mails):
         cur = conn.cursor()
         cur.execute(sql,mails)
         conn.commit()
-    except Exception as e: print(e);
+    except Exception as e: pass;
 
 def create_all_folders_db(folders):
         sql_check_table_exists = """SELECT count(*) FROM sqlite_master 
@@ -108,7 +107,6 @@ def insert_folder_db(name, default) -> bool:
         conn.commit()
         return 1;
     except Exception as e:
-        print(e)
         return 0;
 
 def delete_folder_db(name) -> bool:
@@ -118,7 +116,6 @@ def delete_folder_db(name) -> bool:
         conn.commit()
         return 1;
     except Exception as e:
-        print(e)
         return 0;
 
 def insert_sent_mails_db(mails) -> bool:
@@ -129,7 +126,7 @@ def insert_sent_mails_db(mails) -> bool:
         cur = conn.cursor()
         cur.execute(sql, mails)
         conn.commit()
-    except Exception as e: print("HI",e);
+    except Exception as e: pass;
 
 app = Flask(__name__)
 
@@ -198,7 +195,6 @@ class MailBox:
                 mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]));
             return mails;
         except Exception as e:
-            print(e)
             return 0;
     
     def delete(self, mailid):
@@ -294,11 +290,9 @@ class MailBox:
                         body = msg.get_payload(decode=True).decode()
                         if content_type == "text/plain":
                             # print only text email parts
-                            print(body)
                             copy_body = body
 
-                    print("=" * 100)
-                    x = Mail(messages-i,username,From,subject,copy_body)
+                    x = Mail(i,username,From,subject,copy_body)
                     mails.append(x)
 
 
@@ -365,10 +359,9 @@ class Draft:
         try:
             del drafts[self.mail_id]
         except KeyError:
-            print("Key not found")
+            pass;
 
     def return_err(self):
-        print("Error")
         return
 
 
@@ -387,7 +380,6 @@ class Folder:
                 self.mails.append(mail_id[0]);
             return 1;
         except Exception as e:
-            print(e)
             return 0;
 
     def remove_mails(self, mailid):
@@ -398,7 +390,6 @@ class Folder:
             self.mails.remove(mailid);
             return 1;
         except Exception as e:
-            print(e)
             return 0;
 
 
@@ -414,7 +405,6 @@ class Sent(Folder):
                 self.mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]))
             return 1;
         except Exception as e:
-            print(e)
             return 0;
 
 
@@ -463,9 +453,7 @@ def send_drafts():
 def sent():
     if request.method == 'POST':
         result = request.form
-        print(result)
         receivers = result['receiver_name']
-        print(receivers)
         if(receivers == ""):
             return render_template('./err.html')
         subject = result['subject']
