@@ -211,7 +211,6 @@ class MailBox:
             self.folders[name][0].mails.append(mailid);
             return 1;
         except Exception as e:
-            print(e)
             return 0;
     
     def search(self, search_string):
@@ -388,8 +387,10 @@ class Folder:
             cur.execute('''DELETE FROM folders_link WHERE mail_id == (?)''', (mailid,));
             conn.commit();
             self.mails.remove(mailid);
+            print(self.mails)
             return 1;
         except Exception as e:
+            print(e)
             return 0;
 
 
@@ -466,15 +467,18 @@ def sent():
 def err():
     return render_template('./err.html')
 
-@app.route('/receive.html', methods = ['POST', 'GET'])
-def receive():
-    folder=m.folders.keys()
-    rec_mails=m.receive()
+def delete_illusion(m, rec_mails):
     for i in range(len(m.folders["Trash"][0].mails)):
         for j in range(len(rec_mails)):
             if(m.folders["Trash"][0].mails[i]==rec_mails[j].id):
                 rec_mails.pop(j)
                 break;
+
+@app.route('/receive.html', methods = ['POST', 'GET'])
+def receive():
+    folder=m.folders.keys()
+    rec_mails=m.receive()
+    delete_illusion(m, rec_mails);
     
     if(request.method=="GET"):
         return render_template('./receive.html',content=rec_mails,folder=folder)
@@ -483,11 +487,7 @@ def receive():
         if request.form.get("search"):
             result=request.form['search']
             rec_mails=m.search(result)
-            for i in range(len(m.folders["Trash"][0].mails)):
-                for j in range(len(rec_mails)):
-                    if(m.folders["Trash"][0].mails[i]==rec_mails[j].id):
-                        rec_mails.pop(j)
-                        break;
+            delete_illusion(m, rec_mails);
             return render_template('./receive.html',content=rec_mails,folder=folder)
         
         elif request.form.get("create"):
@@ -517,6 +517,7 @@ def receive():
                 m.delete(Mail_id)
             except: pass;
             finally:
+                delete_illusion(m, rec_mails); 
                 return render_template('./receive.html',content=rec_mails,folder=folder)
         
         elif request.form.get("Rem_Mail1") and request.form.get("Rem_Mail2"):
@@ -537,6 +538,8 @@ def receive():
                         rec_mails = m.folders[k][0].mails;
                     else:
                         rec_mails = m.show(k);
+                        if k != "Trash":
+                            delete_illusion(m, rec_mails);        
                     return render_template('./receive.html',content=rec_mails,folder=folder)
 
 
