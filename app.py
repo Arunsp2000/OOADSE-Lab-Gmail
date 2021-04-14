@@ -8,6 +8,8 @@ from email.mime.base import MIMEBase
 from email.header import Header
 from email import encoders
 
+
+import re;
 import imaplib
 import email
 from email.header import decode_header
@@ -214,17 +216,36 @@ class MailBox:
             return 0;
     
     def search(self, search_string):
-        x = []
+        x = {}
         mails = self.receive();
+        new_str=r'\b'+search_string+r'\b'
         for i in mails:
-            if(i.receiver.find(search_string)>=0):
-                x.append(i)
-            if(i not in x):
-                if(i.subject.find(search_string)>=0):
-                    x.append(i)
-            if(i not in x):
-                if(i.body.find(search_string)>=0):
-                    x.append(i)
+            count_str=0
+            # if(i.receiver.find(search_string)>=0):
+            #     x.append(i)
+            # if(i not in x):
+            #     if(i.subject.find(search_string)>=0):
+            #         x.append(i)
+            # if(i not in x):
+            #     if(i.body.find(search_string)>=0):
+            #         x.append(i)
+            if(re.search(new_str,i.receiver,flags=re.IGNORECASE )):
+                m=re.findall(new_str,i.receiver,flags=re.IGNORECASE)
+                count_str=count_str+len(m)
+            if(re.search(new_str,i.subject,flags=re.IGNORECASE)):
+                m=re.findall(new_str,i.subject,flags=re.IGNORECASE)
+                count_str=count_str+len(m)
+            if(re.search(new_str,i.body,flags=re.IGNORECASE)):
+                m=re.findall(new_str,i.body,flags=re.IGNORECASE)
+                count_str=count_str+len(m)
+
+            if(count_str!=0):
+                x[i]=count_str
+
+        a = sorted(x.items(), key=lambda y: y[1],reverse=True)    
+        x=[]
+        for j in a:
+            x.append(j[0])        
         return x
 
     def receive(self):
