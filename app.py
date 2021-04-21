@@ -9,7 +9,7 @@ from email.header import Header
 from email import encoders
 
 
-import re;
+import re
 import imaplib
 import email
 from email.header import decode_header
@@ -29,7 +29,7 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file,check_same_thread=False)
         return conn
-    except Error as e: pass;
+    except: pass
     return conn
 
 # Database
@@ -41,8 +41,7 @@ def create_table(create_table_sql):
         c = conn.cursor()
         c.execute(create_table_sql)
         conn.commit()
-    except Error as e:
-        pass;
+    except: pass
 
 
 def add_vals(mails):
@@ -53,15 +52,15 @@ def add_vals(mails):
         cur = conn.cursor()
         cur.execute(sql,mails)
         conn.commit()
-    except Exception as e: pass;
+    except: pass
 
 def create_all_folders_db(folders):
         sql_check_table_exists = """SELECT count(*) FROM sqlite_master 
                                     WHERE type='table' AND name='folders';"""
 
-        cur = conn.cursor();
-        cur.execute(sql_check_table_exists);
-        if cur.fetchall()[0][0]: return;
+        cur = conn.cursor()
+        cur.execute(sql_check_table_exists)
+        if cur.fetchall()[0][0]: return
 
         sql_create_folder = """ CREATE TABLE folders (
                                         id integer PRIMARY KEY AUTOINCREMENT,
@@ -87,38 +86,38 @@ def create_all_folders_db(folders):
                                 ); """
 
         if conn is not None:
-            create_table(sql_create_folder);
-            create_table(sql_create_folder_link);
-            create_table(sql_create_sent_mails);
+            create_table(sql_create_folder)
+            create_table(sql_create_folder_link)
+            create_table(sql_create_sent_mails)
             for folder in folders.keys():
-                insert_folder_db(folder, 1);
+                insert_folder_db(folder, 1)
         else:
-            print("Error! cannot create the database connection.");
+            print("Error! cannot create the database connection.")
 
 def retrieve_custom_folders_db() -> dict:
     cur = conn.cursor()
-    cur.execute("SELECT * FROM folders WHERE folders.def == 0");
-    cf = {};
+    cur.execute("SELECT * FROM folders WHERE folders.def == 0")
+    cf = {}
     for folders in cur.fetchall(): cf[folders[1]] = (Folder(folders[1]), 0);
-    return cf;
+    return cf
 
 def insert_folder_db(name, default) -> bool:
     try:
         cur = conn.cursor()
         cur.execute('''INSERT INTO folders(name, def) VALUES(?,?)''', (name, default,))
         conn.commit()
-        return 1;
-    except Exception as e:
-        return 0;
+        return 1
+    except:
+        return 0
 
 def delete_folder_db(name) -> bool:
     try:
         cur = conn.cursor()
         cur.execute('''DELETE FROM folders WHERE folders.name == (?)''', (name,))
         conn.commit()
-        return 1;
-    except Exception as e:
-        return 0;
+        return 1
+    except:
+        return 0
 
 def insert_sent_mails_db(mails) -> bool:
     try:
@@ -128,7 +127,7 @@ def insert_sent_mails_db(mails) -> bool:
         cur = conn.cursor()
         cur.execute(sql, mails)
         conn.commit()
-    except Exception as e: pass;
+    except: pass
 
 app = Flask(__name__)
 
@@ -144,7 +143,7 @@ drafts = {}
 
 class Mail:
     def __init__(self, id, sender, receiver, subject, body):
-        self.id = id;
+        self.id = id
         self.sender = sender
         self.receiver = receiver.strip()
         self.subject = subject.strip()
@@ -153,13 +152,13 @@ class Mail:
 
 class MailBox:
     def __init__(self):
-        self.folders = {"Sent" : (Sent(), 1), "Important" : (Important(), 1), "Spam" : (Spam(), 1), "Trash" : (Trash(), 1), "Archive" : (Archive(), 1)};
-        create_all_folders_db(self.folders);
-        self.folders.update(retrieve_custom_folders_db()); 
+        self.folders = {"Sent" : (Sent(), 1), "Important" : (Important(), 1), "Spam" : (Spam(), 1), "Trash" : (Trash(), 1), "Archive" : (Archive(), 1)}
+        create_all_folders_db(self.folders)
+        self.folders.update(retrieve_custom_folders_db())
     
     def compose(self, receivers, subject, body):
         file_name = ""
-        mail_id = len(self.folders["Sent"][0].mails)+1;
+        mail_id = len(self.folders["Sent"][0].mails)+1
         compose_mail = Draft(self.folders["Sent"][0], receivers, body, file_name, subject, mail_id)
         drafts[mail_id] = compose_mail
         return compose_mail
@@ -167,57 +166,56 @@ class MailBox:
     def create_folder(self, name):
         if name not in self.folders:
             self.folders[name] = (Folder(name),0)
-            insert_folder_db(name, 0);
-            print("Folder Created")
+            insert_folder_db(name, 0)
+            return "Folder Created"
         else:
-            print("Folder Already Exists")
-    
+            return "Folder Already Exists"
+
     def delete_folder(self, name):
         if name in self.folders:
-            print(self.folders[name])
             if not self.folders[name][1]:
-                delete_folder_db(name);
-                self.folders.pop(name);
-                print("Folder Deleted")
+                delete_folder_db(name)
+                self.folders.pop(name)
+                return "Folder Deleted"
             else:
-                print("Folder Marked Default")
+                return "Folder Marked Default"
         else:
-            print("Folder Doesnt Exists")
+            return "Folder Doesnt Exists"
 
     def show(self, name):
         try:
-            if name not in self.folders.keys(): return 0;
+            if name not in self.folders.keys(): return "Folder Doesn't Exist"
             cur = conn.cursor()
-            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (name,));
+            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (name,))
             cur.execute('''SELECT mail_id FROM folders_link WHERE folder_id == (?)''', (cur.fetchall()[0][0],))
-            mails = [];
+            mails = []
             for mail_id in cur.fetchall():
-                cur.execute('''SELECT * FROM mails WHERE id == (?)''', (mail_id[0],));
-                mail = cur.fetchall()[0];
-                mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]));
-            return mails;
-        except Exception as e:
-            return 0;
+                cur.execute('''SELECT * FROM mails WHERE id == (?)''', (mail_id[0],))
+                mail = cur.fetchall()[0]
+                mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]))
+            return mails
+        except:
+            return "Unexpected Error"
     
     def delete(self, mailid):
-        self.send_to_folder("Trash", mailid);
+        return self.send_to_folder("Trash", mailid)
     
     def send_to_folder(self, name, mailid):
         try:
-            if name not in self.folders.keys(): return 0;
-            if name == "Sent": return 0;
+            if name not in self.folders.keys(): return "Folder Doesnt Exist"
+            if name == "Sent": return r"Sent to folder : ERROR : Sending to Sent Folder"
             cur = conn.cursor()
-            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (name,));
+            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (name,))
             cur.execute('''INSERT INTO folders_link(mail_id, folder_id) VALUES(?,?)''', (mailid, cur.fetchall()[0][0],))
             conn.commit()
-            self.folders[name][0].mails.append(mailid);
-            return 1;
-        except Exception as e:
-            return 0;
+            self.folders[name][0].mails.append(mailid)
+            return "Sent to Folder "+str(name)
+        except:
+            return "Mail Doesnt Exist"
     
     def search(self, search_string):
         x = {}
-        mails = self.receive();
+        mails = self.receive()
         new_str=r'\b'+search_string+r'\b'
         for i in mails:
             count_str=0
@@ -252,7 +250,7 @@ class MailBox:
         mails = []
         status, messages = imap.select("INBOX")
         # number of top emails to fetch
-        N = 10;
+        N = 10
         # total number of emails
         messages = int(messages[0])
         copy_body = ""
@@ -359,7 +357,7 @@ class Draft:
         
         mailids = self.parse_receivers()
         new_recv=",".join(mailids)
-        insert_sent_mails_db((self.mail_id, username, new_recv, self.subject, self.body));
+        insert_sent_mails_db((self.mail_id, username, new_recv, self.subject, self.body))
 
         for mailid in mailids:
             s = smtplib.SMTP('smtp.gmail.com', 587)
@@ -379,7 +377,7 @@ class Draft:
         try:
             del drafts[self.mail_id]
         except KeyError:
-            pass;
+            pass
 
     def return_err(self):
         return
@@ -387,37 +385,35 @@ class Draft:
 
 class Folder:
     def __init__(self, name):
-        self.name = name;
-        self.mails = [];
-        self.retrieve_mails_db();
+        self.name = name
+        self.mails = []
+        self.retrieve_mails_db()
 
     def retrieve_mails_db(self):
         try:
             cur = conn.cursor()
-            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (self.name,));
+            cur.execute('''SELECT id FROM folders WHERE folders.name == (?)''', (self.name,))
             cur.execute('''SELECT mail_id FROM folders_link WHERE folder_id == (?)''', (cur.fetchall()[0][0],))
             for mail_id in cur.fetchall():
-                self.mails.append(mail_id[0]);
-            return 1;
-        except Exception as e:
-            return 0;
+                self.mails.append(mail_id[0])
+            return 1
+        except:
+            return 0
 
     def remove_mails(self, mailid):
         try:
             cur = conn.cursor()
-            cur.execute('''DELETE FROM folders_link WHERE mail_id == (?)''', (mailid,));
-            conn.commit();
-            self.mails.remove(mailid);
-            print(self.mails)
-            return 1;
-        except Exception as e:
-            print(e)
-            return 0;
+            cur.execute('''DELETE FROM folders_link WHERE mail_id == (?)''', (mailid,))
+            conn.commit()
+            self.mails.remove(mailid)
+            return "Removed Mail"
+        except:
+            return "Folder or Mailid Not Existing"
 
 
 class Sent(Folder):
     def __init__(self):
-        Folder.__init__(self, "Sent");
+        Folder.__init__(self, "Sent")
 
     def retrieve_mails_db(self):
         try:
@@ -425,29 +421,29 @@ class Sent(Folder):
             cur.execute('''SELECT * FROM sent_mails''')
             for mail in cur.fetchall():
                 self.mails.append(Mail(mail[0], mail[1], mail[2], mail[3], mail[4]))
-            return 1;
-        except Exception as e:
-            return 0;
+            return 1
+        except:
+            return 0
 
 
 class Important(Folder):
     def __init__(self):
-        Folder.__init__(self, "Important");
+        Folder.__init__(self, "Important")
 
 
 class Spam(Folder):
     def __init__(self):
-        Folder.__init__(self, "Spam");
+        Folder.__init__(self, "Spam")
 
 
 class Trash(Folder):
     def __init__(self):
-        Folder.__init__(self, "Trash");
+        Folder.__init__(self, "Trash")
 
 
 class Archive(Folder):
     def __init__(self):
-        Folder.__init__(self, "Archive");
+        Folder.__init__(self, "Archive")
 
 
 @app.route('/')
@@ -502,65 +498,68 @@ def receive():
     delete_illusion(m, rec_mails);
     
     if(request.method=="GET"):
-        return render_template('./receive.html',content=rec_mails,folder=folder)
+        return render_template('./receive.html',content=rec_mails,folder=folder,m=0)
     
     elif(request.method=="POST"):
         if request.form.get("search"):
             result=request.form['search']
             rec_mails=m.search(result)
             delete_illusion(m, rec_mails);
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            return render_template('./receive.html',content=rec_mails,folder=folder,m=0)
         
         elif request.form.get("create"):
             result=request.form['create']
-            m.create_folder(result)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            msg = m.create_folder(result)
+            return render_template('./receive.html',content=rec_mails,folder=folder,m=1,msg=msg)
         
         elif request.form.get("Del_Folder"):
             result=request.form['Del_Folder']
-            m.delete_folder(result)
-            return render_template('./receive.html',content=rec_mails,folder=folder)
+            msg=m.delete_folder(result)
+            return render_template('./receive.html',content=rec_mails,folder=folder,m=1,msg=msg)
         
         elif request.form.get("Send1") and request.form.get("Send2"):
+            msg="Put integer mailid"
             try:
                 folder_name=request.form['Send1']
                 Mail_id=request.form['Send2']
                 Mail_id=int(Mail_id)
-                m.send_to_folder(folder_name,Mail_id)
-            except: pass;
+                msg=m.send_to_folder(folder_name,Mail_id)
+            except: pass
             finally:
-                return render_template('./receive.html',content=rec_mails,folder=folder)
+                return render_template('./receive.html',content=rec_mails,folder=folder,m=1,msg=msg)
         
         elif request.form.get("Del_Mail"):
+            msg="Put integer mailid"
             try:
                 Mail_id=request.form['Del_Mail']
                 Mail_id=int(Mail_id)
-                m.delete(Mail_id)
-            except: pass;
+                msg=m.delete(Mail_id)
+            except: pass
             finally:
-                delete_illusion(m, rec_mails); 
-                return render_template('./receive.html',content=rec_mails,folder=folder)
+                delete_illusion(m, rec_mails)
+                return render_template('./receive.html',content=rec_mails,folder=folder,m=1,msg=msg)
         
         elif request.form.get("Rem_Mail1") and request.form.get("Rem_Mail2"):
+            msg="Folder Doesnt Exist"
             try:
                 folder_name=request.form['Rem_Mail1']
                 Mail_id=request.form['Rem_Mail2']
                 Mail_id=int(Mail_id)
                 if folder_name in m.folders:
-                    m.folders[folder_name][0].remove_mails(Mail_id)
-            except: pass;
+                    msg=m.folders[folder_name][0].remove_mails(Mail_id)
+            except: pass
             finally:
-                return render_template('./receive.html',content=rec_mails,folder=folder)
+                return render_template('./receive.html',content=rec_mails,folder=folder,m=1,msg=msg)
 
         else:
             for k in m.folders.keys():
                 if request.form.get(k):
                     if k == "Sent":
-                        rec_mails = m.folders[k][0].mails;
+                        rec_mails = m.folders[k][0].mails
                     else:
-                        rec_mails = m.show(k);
+                        rec_mails = m.show(k)
                         if k != "Trash":
-                            delete_illusion(m, rec_mails);        
+                            delete_illusion(m, rec_mails)     
                     return render_template('./receive.html',content=rec_mails,folder=folder)
 
 
