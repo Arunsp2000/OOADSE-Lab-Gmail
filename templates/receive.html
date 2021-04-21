@@ -3,6 +3,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Receive</title>
+        <script>
+            function submitbtn() {
+                var right = document.getElementsByClassName("right");
+                var search = document.getElementsByClassName("search_btn");
+                for(var i = 0; i < right.length; i++) {
+                    right[i].disabled = true;
+                }
+                for(var i = 0; i < search.length; i++) {
+                    search[i].disabled = true;
+                }
+            }
+        </script>
         <style>
             body{
                 background: url(/static/images/bg.jpg) no-repeat center center fixed; 
@@ -157,6 +169,11 @@
     </head>
 
     <body>
+        {% if m %}
+            <script type="text/javascript">
+                alert('{{msg}}')
+            </script>
+        {% endif %}
         <div class = "wrapper">
             <!-- left -->
             <div class = "sidenav">
@@ -175,39 +192,39 @@
                 </div>
                 <div class="separate">
                     <div style="margin-bottom: 10px;">Create Folder</div>
-                    <form action="#" method="POST">
-                    <input type="text" name="create" placeholder="Folder Name..." class="folder_input" required>
-                    <button class = "right">&#10004;</button>
-                    </form>    
+                    <form action="#" method="POST" onsubmit="submitbtn()">
+                        <input type="text" name="create" placeholder="Folder Name..." class="folder_input" required>
+                        <button class = "right">&#10004;</button>
+                    </form>
                 </div>
                 <div class="separate">
-                    <form action="#" method="POST">
-                    <div style="margin-bottom: 10px;">Delete Folder</div>
-                    <input type="text" name="Del_Folder" placeholder="Folder Name..." class="folder_input" required>
-                    <button class = "right">&#10004;</button>
+                    <form action="#" method="POST" onsubmit="submitbtn()">
+                        <div style="margin-bottom: 10px;">Delete Folder</div>
+                        <input type="text" name="Del_Folder" placeholder="Folder Name..." class="folder_input" required>
+                        <button class = "right">&#10004;</button>
                     </form>
                 </div>
                 <div class="separate">
                     <div style="margin-bottom: 10px;">Send To Folder</div>
-                    <form action="#" method="POST">
-                    <input type="text" name="Send1" placeholder="Folder Name..." class="folder_input" required><br><br>
-                    <input type="text" name="Send2" placeholder="Mail_Id" class="folder_input" required>
-                    <button class = "right">&#10004;</button>
+                    <form action="#" method="POST" onsubmit="submitbtn()">
+                        <input type="text" name="Send1" placeholder="Folder Name..." class="folder_input" required><br><br>
+                        <input type="text" name="Send2" placeholder="Mail_Id" class="folder_input" required>
+                        <button class = "right">&#10004;</button>
                     </form>
                 </div>
                 <div class="separate">
-                    <form action="#" method="POST">
-                    <div style="margin-bottom: 10px;">Delete Mail</div>
-                    <input type="text" name="Del_Mail" placeholder="Mail_Id" class="folder_input" required>
-                    <button class = "right">&#10004;</button>
+                    <form action="#" method="POST" onsubmit="submitbtn()">
+                        <div style="margin-bottom: 10px;">Delete Mail</div>
+                        <input type="text" name="Del_Mail" placeholder="Mail_Id" class="folder_input" required>
+                        <button class = "right">&#10004;</button>
                     </form>
                 </div>
                 <div class="separate">
-                    <form action="#" method="POST">
-                    <div style="margin-bottom: 10px;">Remove Mail From Folder</div>
-                    <input type="text" name="Rem_Mail1" placeholder="Folder Name..." class="folder_input" required><br><br>
-                    <input type="text" name="Rem_Mail2" placeholder="Mail_Id" class="folder_input" required>
-                    <button class = "right">&#10004;</button>
+                    <form action="#" method="POST" onsubmit="submitbtn()">
+                        <div style="margin-bottom: 10px;">Remove Mail From Folder</div>
+                        <input type="text" name="Rem_Mail1" placeholder="Folder Name..." class="folder_input" required><br><br>
+                        <input type="text" name="Rem_Mail2" placeholder="Mail_Id" class="folder_input" required>
+                        <button class = "right">&#10004;</button>
                     </form>
                 </div>
             </div>
@@ -225,9 +242,9 @@
                             MAILBOX
                         </a>
                     </div>
-                    <form action="#" method="POST"> 
-                    <input type="text" id="search" name="search" placeholder="Search..." class = "search" required>
-                    <button type="submit" class="search_btn">&#128269;</button>
+                    <form action="#" method="POST" onsubmit="submitbtn()"> 
+                        <input type="text" id="search" name="search" placeholder="Search..." class = "search" required>
+                        <button type="submit" class="search_btn">&#128269;</button>
                     </form>
                 </div>
                 <div>
